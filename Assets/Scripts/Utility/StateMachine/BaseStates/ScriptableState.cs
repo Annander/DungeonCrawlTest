@@ -1,6 +1,7 @@
 using UnityEngine;
 
-public class ScriptableState : ScriptableObject, IState
+public class ScriptableState : ScriptableObject, 
+    IState
 {
     public virtual bool HasEntered => false;
 

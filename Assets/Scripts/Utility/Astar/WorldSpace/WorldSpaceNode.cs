@@ -1,6 +1,7 @@
 using UnityEngine;
 
-public class WorldSpaceNode : MonoBehaviour, IGraphNode
+public class WorldSpaceNode : MonoBehaviour, 
+    IGraphNode
 {
     public int Index
     {

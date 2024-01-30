@@ -12,7 +12,7 @@ public class Dungeon : UnitySingleton<Dungeon>
     private int tileCount = 10;
 
     [SerializeField]
-    [Range(2,6)]
+    [Range(2,6)][Tooltip("Number of steps for determining which tiles should be rendered.")]
     private int recursion = 2;
 
     [SerializeField]
@@ -40,8 +40,8 @@ public class Dungeon : UnitySingleton<Dungeon>
         player = GetComponentInChildren<Player>();
         dungeonRenderer = GetComponent<DungeonRenderer>();
 
-        //GenerateDungeon_Roaming();
-        GenerateDungeon_TileBased();
+        GenerateDungeon_Roaming();
+        //GenerateDungeon_TileBased();
     }
 
     private void Start()
@@ -101,42 +101,23 @@ public class Dungeon : UnitySingleton<Dungeon>
         var x = 0;
         var y = 0;
 
-        var selectedDirection = (Direction)Random.Range(0, 4) + 1;
+        var direction = (Direction)Random.Range(0, 4) + 1;
 
         // Spend footprintBudget on tiles
         //while (footprintBudget > 0)
-        for(int i = 0; i < 4; i++)
+        for(int i = 0; i < 2; i++)
         {
-            TileFootprint newFootprint = null;
+            var footprintCandidate = GetFootprintCandidate(footprintBudget);
 
-            GetFootprintCandidate(x, y, footprintBudget, out newFootprint, selectedDirection);
-
-            while (!GetFootprintIsValid(x, y, newFootprint, selectedDirection))
+            while(!GetFootprintIsValid(x, y, footprintCandidate, direction))
             {
-                GetFootprintCandidate(x, y, footprintBudget, out newFootprint, selectedDirection);
+                direction = (Direction)Random.Range(0, 4) + 1;
             }
 
-            if (newFootprint != null)
-            {
-                AddFootprint(x, y, newFootprint, selectedDirection);
-                footprintBudget -= newFootprint.TileCount;
-
-                var localX = x;
-                var localY = y;
-
-                if(selectedDirection == Direction.North)
-                    y = localY + newFootprint.Height;
-
-                if (selectedDirection == Direction.South)
-                    y = localY - newFootprint.Height;
-
-                if (selectedDirection == Direction.West)
-                    x = localX + newFootprint.Width;
-
-                if (selectedDirection == Direction.East)
-                    x = localX - newFootprint.Width;
-
-                selectedDirection = (Direction)Random.Range(0, 4) + 1;
+            if (footprintCandidate != null) 
+            { 
+                AddFootprint(x, y, footprintCandidate, direction);
+                footprintBudget -= footprintCandidate.TileCount;
             }
 
             if (footprintBudget < SmallestFootprintSize())
@@ -146,16 +127,11 @@ public class Dungeon : UnitySingleton<Dungeon>
         // Spend remaining footprintBudget, if any
         if (footprintBudget > 0)
         {
-            Debug.Log("Remaining Budget: " + footprintBudget.ToString());
-
             for(int i = tileIndex; i < tileCount; i++)
             {
-                //tiles[i].Type = TileType.Void;
                 footprintBudget--;
             }
         }
-
-        Debug.Log("Remaining Budget: " + footprintBudget.ToString());
 
         for (int i = 0; i < tileCount; i++)
         {
@@ -169,9 +145,9 @@ public class Dungeon : UnitySingleton<Dungeon>
         
     }
 
-    private void GetFootprintCandidate(int x, int y, int currentBudget, out TileFootprint candidate, Direction direction)
+    private TileFootprint GetFootprintCandidate(int currentBudget)
     {
-        candidate = null;
+        TileFootprint candidate = null;
 
         var candidateList = new List<TileFootprint>();
 
@@ -186,6 +162,8 @@ public class Dungeon : UnitySingleton<Dungeon>
             var localIndex = Random.Range(0, candidateList.Count);
             candidate = candidateList[localIndex];
         }
+
+        return candidate;
     }
 
     private int SmallestFootprintSize()
@@ -203,30 +181,31 @@ public class Dungeon : UnitySingleton<Dungeon>
 
     private void AddFootprint(int x, int y, TileFootprint footprint, Direction direction)
     {
-        var index = tileIndex;
+        var localX = x;
+        var localY = y;
 
-        tiles[index] = new Tile();
+        if (direction == Direction.North)
+            localY += footprint.Height;
 
-        tiles[index].x = x;
-        tiles[index].y = y;
+        if (direction == Direction.South)
+            localY -= footprint.Height;
 
-        for (int i = 0; i < footprint.Footprint.Length; i++)
+        if (direction == Direction.East)
+            localX += footprint.Width;
+
+        if (direction == Direction.West)
+            localX -= footprint.Width;
+
+        for (int v = 0; v < footprint.Height; v++)
         {
-            index = tileIndex++;
-
-            tiles[index] = new Tile();
-
-            var tileXY = footprint.IndexToXY(i);
-
-            if(direction != Direction.West)
-                tiles[index].x = x + tileXY[0];
-            else
-                tiles[index].x = x - tileXY[0];
-
-            if(direction == Direction.South)
-                tiles[index].y = y + tileXY[1];
-            else
-                tiles[index].y = y - tileXY[1];
+            for (int u = 0; u < footprint.Width; u++)
+            {
+                var index = tileIndex++;
+                
+                tiles[index] = new Tile();
+                tiles[index].x = localX + u;
+                tiles[index].y = localY + v;
+            }
         }
 
         Debug.Log("Footprint Added: " + footprint.name);
@@ -234,31 +213,28 @@ public class Dungeon : UnitySingleton<Dungeon>
 
     private bool GetFootprintIsValid(int x, int y, TileFootprint footprint, Direction direction)
     {
-        if (footprint == null)
-            return false;
+        var localX = x;
+        var localY = y;
 
-        if (IsCoordinateOccupied(x, y))
-            return false;
+        if (direction == Direction.North)
+            localY += footprint.Height;
 
-        for(int i = 0; i < footprint.Footprint.Length; i++)
+        if (direction == Direction.South)
+            localY -= footprint.Height;
+
+        if (direction == Direction.East)
+            localX += footprint.Width;
+
+        if (direction == Direction.West)
+            localX -= footprint.Width;
+
+        for (int v = 0; v < footprint.Height; v++)
         {
-            var localX = x;
-            var xy = footprint.IndexToXY(i);
-
-            if (direction != Direction.West)
-                localX += xy[0];
-            else
-                localX -= xy[0];
-
-            var localY = y;
-
-            if (direction != Direction.South)
-                localY += xy[1];
-            else
-                localY -= xy[1];
-
-            if (IsCoordinateOccupied(localX, localY))
-                return false;
+            for(int u = 0; u < footprint.Width; u++)
+            {
+                if (IsCoordinateOccupied(localX + u, localY + v))
+                    return false;
+            }
         }
 
         return true;
@@ -516,6 +492,7 @@ public class Dungeon : UnitySingleton<Dungeon>
 
         UnityEditor.Handles.Label(player.transform.position + Vector3.up * 4f, label);
 
+        /* For drawing the whole maze and not just the local space
         foreach (var room in tiles)
         {
             if(room == null) 
@@ -528,6 +505,7 @@ public class Dungeon : UnitySingleton<Dungeon>
             UnityEditor.Handles.Label(labelPosition, room.x.ToString() + "," + room.y.ToString());
             DebugUtility.DrawRoom(position, room, Color.blue);
         }
+        */
 
         foreach(var room in localSpace)
         {

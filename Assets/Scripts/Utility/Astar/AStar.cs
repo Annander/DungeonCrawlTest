@@ -2,8 +2,8 @@ using System.Collections.Generic;
 
 public class WorldSpaceAStar : AStar<WorldSpaceNode, WorldSpaceEdge, WorldSpaceGraph, DistanceHeuristic>
 {
-    public WorldSpaceAStar(WorldSpaceGraph graph, DistanceHeuristic heuristic) : 
-        base(graph, heuristic) 
+    public WorldSpaceAStar(WorldSpaceGraph graph, DistanceHeuristic heuristic) :
+        base(graph, heuristic)
     {}
 }
 

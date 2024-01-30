@@ -71,7 +71,7 @@ public class PlayerMove : BaseState
             time -= Time.deltaTime;
 
             var t = 1f - (time / Player.Instance.MoveTime);
-            t = Easing.Quint_In(t);
+            t = Easing.Bounce_InOut(t);
 
             var vector = Vector3.Lerp(origin, frameGoal, t);
 

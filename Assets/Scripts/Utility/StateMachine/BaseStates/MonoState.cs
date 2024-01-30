@@ -1,6 +1,7 @@
 using UnityEngine;
 
-public class MonoState : MonoBehaviour, IState
+public class MonoState : MonoBehaviour, 
+    IState
 {
     public virtual bool HasEntered => false;
 

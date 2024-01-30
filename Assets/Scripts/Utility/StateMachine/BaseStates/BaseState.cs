@@ -1,4 +1,5 @@
-public class BaseState : IState
+public class BaseState 
+    : IState
 {
     public virtual bool HasEntered => false;
 
