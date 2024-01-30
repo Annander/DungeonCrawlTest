@@ -33,6 +33,7 @@ public class TileFootprintInspector : Editor
         EditorGUILayout.Space(20f);
 
         var newEntrances = new List<int>();
+        var addOneEntrance = false;
 
         for (int y = 0; y < height.intValue; y++) 
         {
@@ -47,71 +48,93 @@ public class TileFootprintInspector : Editor
 
                 if(element.boolValue)
                 {
-                    if(height.intValue > 1)
+                    for (int i = 0; i < entrances.arraySize; i++)
                     {
-                        // North
-                        if (x == width.intValue / 2 && y == height.intValue - 1)
-                        {
-                            newEntrances.Add(index);
+                        if(entrances.GetArrayElementAtIndex(i).intValue == index)
                             GUI.color = Color.green;
-                        }
-
-                        // South
-                        if (x == width.intValue / 2 && y == 0)
-                        {
-                            newEntrances.Add(index);
-                            GUI.color = Color.green;
-                        }
-                    }
-
-                    if(width.intValue > 1)
-                    {
-                        // West
-                        if (x == 0 && y == height.intValue / 2)
-                        {
-                            newEntrances.Add(index);
-                            GUI.color = Color.green;
-                        }
-
-                        // East
-                        if (x == width.intValue - 1 && y == height.intValue / 2)
-                        {
-                            newEntrances.Add(index);
-                            GUI.color = Color.green;
-                        }
                     }
                 }
 
+                var e = Event.current;
+
+                var boolValue = element.boolValue;
+                
                 element.boolValue = EditorGUILayout.Toggle(element.boolValue, GUILayout.Width(20f));
+                
+                // If a change happened and you held shift down
+                if (element.boolValue != boolValue &&
+                    e.shift)
+                {
+                    // If the bool was unselected
+                    if (!element.boolValue)
+                    {
+                        element.boolValue = true;
+                        if(!newEntrances.Contains(index) && !EntranceExists(index))
+                            newEntrances.Add(index);                        
+                    }
+                }
+                
+                // If a flag was unchecked, it must also be removed from the entrance array if it exists there
+                if (!element.boolValue)
+                {
+                    var elementIndexForDeletion = -1;
+                    
+                    for (int i = 0; i < entrances.arraySize; i++)
+                    {
+                        if (entrances.GetArrayElementAtIndex(i).intValue == index)
+                            elementIndexForDeletion = i;
+                    }
+                    
+                    if(elementIndexForDeletion > -1)
+                        entrances.DeleteArrayElementAtIndex(elementIndexForDeletion);
+                }
             }
 
             EditorGUILayout.EndHorizontal();
         }
 
         GUI.color = Color.white;
+        
+        if (newEntrances.Count > 0)
+        {
+            var arraySize = entrances.arraySize;
 
-        entrances.ClearArray();
-        entrances.arraySize = newEntrances.Count;
+            for (var i = 0; i < arraySize; i++)
+            {
+                newEntrances.Add(entrances.GetArrayElementAtIndex(i).intValue);
+            }
+            
+            entrances.ClearArray();
+            
+            for (int i = 0; i < newEntrances.Count; i++)
+            {
+                entrances.InsertArrayElementAtIndex(i);
+                entrances.GetArrayElementAtIndex(i).intValue = newEntrances[i];
+            }
+            
+            newEntrances.Clear();
+        }
 
         var entranceIndexLabel = "";
 
-        for (int i = 0; i < newEntrances.Count; i++)
+        for (var i = 0; i < entrances.arraySize; i++)
         {
-            entrances.InsertArrayElementAtIndex(i);
-            entrances.GetArrayElementAtIndex(i).intValue = newEntrances[i];
-            entranceIndexLabel += newEntrances[i].ToString();
-
-            if (i < newEntrances.Count - 1)
+            entranceIndexLabel += entrances.GetArrayElementAtIndex(i).intValue.ToString();
+            if (i < entrances.arraySize - 1)
                 entranceIndexLabel += ", ";
         }
+        
+        EditorGUILayout.LabelField("Shift-click to create entrance:", EditorStyles.miniLabel);
         
         EditorGUILayout.LabelField(entranceIndexLabel);
 
         EditorGUILayout.BeginHorizontal();
 
-        if (GUILayout.Button("FILL")) FillFootprintArray(true);
+        if (GUILayout.Button("FILL TILES")) FillFootprintArray(true);
 
-        if (GUILayout.Button("CLEAR")) FillFootprintArray(false);
+        if (GUILayout.Button("CLEAR TILES")) FillFootprintArray(false);
+        
+        if (GUILayout.Button("CLEAR ENTRANCES")) entrances.ClearArray();
 
         EditorGUILayout.EndHorizontal();
 
@@ -124,5 +147,16 @@ public class TileFootprintInspector : Editor
         {
             footprint.GetArrayElementAtIndex(i).boolValue = fill;
         }
+    }
+
+    private bool EntranceExists(int index)
+    {
+        for (var i = 0; i < entrances.arraySize; i++)
+        {
+            if (entrances.GetArrayElementAtIndex(i).intValue == index)
+                return true;
+        }
+
+        return false;
     }
 }
