@@ -8,11 +8,10 @@ public class DungeonMesh : MonoBehaviour
 
     private Mesh mesh;
 
-    private List<Vector3> vertices = new List<Vector3>();
-    private List<Vector3> normals = new List<Vector3>();
-    private List<Vector2> uv = new List<Vector2>();
-    private List<Color> colors = new List<Color>();
-    private List<int> triangles = new List<int>();
+    private readonly List<Vector3> vertices = new();
+    private readonly List<Vector3> normals = new();
+    private readonly List<Vector2> uv = new();
+    private readonly List<int> triangles = new();
 
     private void Awake()
     {
@@ -45,7 +44,6 @@ public class DungeonMesh : MonoBehaviour
         mesh.Clear();
 
         vertices.Clear();
-        colors.Clear();
         normals.Clear();
         triangles.Clear();
         uv.Clear();
@@ -56,7 +54,6 @@ public class DungeonMesh : MonoBehaviour
         }
 
         mesh.vertices = vertices.ToArray();
-        mesh.colors = colors.ToArray();
         mesh.triangles = triangles.ToArray();
         mesh.uv = uv.ToArray();
         mesh.normals = normals.ToArray();

@@ -1,7 +1,5 @@
 public interface IState
 {
-    public bool HasEntered { get; }
-
     public StateReturn OnUpdate();
 
     public void OnEnter();

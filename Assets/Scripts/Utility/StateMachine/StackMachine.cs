@@ -6,43 +6,39 @@ using System.Collections.Generic;
 /// </summary>
 public class StackMachine : MonoBehaviour
 {
-	public const string NOSTATE = "None";
+	private const string NoState = "None";
 
-	private Stack<IState> stack = new Stack<IState>();
+	private readonly Stack<IState> stack = new();
 
 	protected virtual void Update()
-    {
-		if (stack.Count > 0)
-        {
-			var state = stack.Peek().OnUpdate();
-
-			if (state == StateReturn.Completed)
-				PopState();
-		}
-	}
-
-	public void Clear() 
 	{
-		stack.Clear();
+		if (stack.Count <= 0) return;
+		
+		var state = stack.Peek().OnUpdate();
+
+		if (state == StateReturn.Completed)
+			PopState();
 	}
+
+	public void Clear() => stack.Clear();
 
 	public void PushState(IState state, bool onEnter = true)
 	{
-		if ( stack.Count > 0 )
+		if (stack.Count > 0)
 		{
-			if ( stack.Peek() == state )
+			if (stack.Peek() == state)
 				return;
-			else
-				stack.Peek().OnExit();
+			
+			stack.Peek().OnExit();
 		}
 
-		if(onEnter && !state.HasEntered)
+		if(onEnter) 
 			state.OnEnter();
 
 		stack.Push(state);
 	}
 
-	public void PopState() 
+	public void PopState()
 	{
         if (stack.Count == 0)
             return;
@@ -53,9 +49,7 @@ public class StackMachine : MonoBehaviour
         if(stack.Count > 0)
 		{
 			var state = stack.Peek();
-            
-			if(!state.HasEntered)
-				state.OnEnter();
+			state.OnEnter();
         }
 	}
 
@@ -64,10 +58,7 @@ public class StackMachine : MonoBehaviour
 		if (stack.Count < 1)
 			return false;
 
-		if( state == stack.Peek() )
-			return true;
-
-		return false;
+		return state == stack.Peek();
 	}
 
 #if UNITY_EDITOR
@@ -82,7 +73,7 @@ public class StackMachine : MonoBehaviour
             if (stack.Count > 0)
                 return stack.Peek().ToString();
 
-            return NOSTATE;
+            return NoState;
         }
     }
 

@@ -7,14 +7,14 @@ using System.Collections.Generic;
 public class QueueMachine<T>
 	where T : MonoBehaviour
 {
-	public event DequeueDelegate OnDequeue;
-	public delegate void DequeueDelegate(IState dequeuedState);
+	public event QueueDelegate OnDequeue;
+	public delegate void QueueDelegate(IState state);
 
-	public const string NOSTATE = "None";
+	private const string NoState = "None";
 
-	private Queue<IState> queue = new Queue<IState>();
+	private readonly Queue<IState> queue = new();
 
-	private T owner;
+	private readonly T owner;
 
 	public QueueMachine(T owner)
 	{
@@ -22,17 +22,13 @@ public class QueueMachine<T>
 	}
 
 	public void Update()
-    {
-		if (queue.Count > 0)
-        {
-			var state = queue.Peek();
+	{
+		if (queue.Count <= 0) return;
+		
+		var state = queue.Peek();
 
-			if(!state.HasEntered)
-                state.OnEnter();
-
-            if (state.OnUpdate() == StateReturn.Completed)
-				DequeueState();
-		}
+		if (state.OnUpdate() == StateReturn.Completed)
+			DequeueState();
 	}
 
 	public void Clear() 
@@ -40,7 +36,7 @@ public class QueueMachine<T>
 		queue.Clear();
 	}
 
-	public void EnqueueState(IState state)
+	public void EnqueueState(IState state, bool undo = false)
 	{
 		if ( queue.Count > 0 )
 		{
@@ -48,8 +44,10 @@ public class QueueMachine<T>
 				return;
 		}
 
-		if(state.HasEntered)
+		if(undo)
 			state.OnUndo();
+		else
+			state.OnEnter();
 
         queue.Enqueue(state);
 	}
@@ -64,6 +62,12 @@ public class QueueMachine<T>
 
         OnDequeue?.Invoke(state);
     }
+
+	public bool IsState<TState>()
+	{
+		if (queue.Count <= 0) return false;
+		return queue.Peek().GetType() == typeof(TState);
+	}
 
 	public bool IsState(IState state)
 	{
@@ -88,7 +92,7 @@ public class QueueMachine<T>
             if (queue.Count > 0)
                 return queue.Peek().ToString();
 
-            return NOSTATE;
+            return NoState;
         }
     }
 

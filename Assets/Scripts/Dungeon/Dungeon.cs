@@ -40,13 +40,13 @@ public class Dungeon : UnitySingleton<Dungeon>
         player = GetComponentInChildren<Player>();
         dungeonRenderer = GetComponent<DungeonRenderer>();
 
-        GenerateDungeon_Roaming();
-        //GenerateDungeon_TileBased();
+        //GenerateDungeon_Roaming();
+        GenerateDungeon_TileBased();
     }
 
     private void Start()
     {
-        UpdatePlayer();
+        UpdatePlayer(transform.position, transform.forward);
     }
 
     #region Generator
@@ -382,8 +382,7 @@ public class Dungeon : UnitySingleton<Dungeon>
         if (sourceRoom == null)
             return;
 
-        var frontier = new List<Tile>();
-        frontier.Add(sourceRoom);
+        var frontier = new List<Tile> { sourceRoom };
 
         var iterations = recursion;
 
@@ -404,8 +403,8 @@ public class Dungeon : UnitySingleton<Dungeon>
                 }
                 else
                 {
-                    var xCheck = (entityFacing == Direction.East) || (entityFacing == Direction.West) ? (entityFacing == Direction.East ? -1 : 1 ) : 0;
-                    var yCheck = (entityFacing == Direction.North) || (entityFacing == Direction.South) ? (entityFacing == Direction.North ? -1 : 1) : 0;
+                    var xCheck = entityFacing is Direction.East or Direction.West ? (entityFacing == Direction.East ? -1 : 1 ) : 0;
+                    var yCheck = entityFacing is Direction.North or Direction.South ? (entityFacing == Direction.North ? -1 : 1) : 0;
                     
                     foreach(var connection in room.Connections)
                     {
@@ -432,44 +431,49 @@ public class Dungeon : UnitySingleton<Dungeon>
         localSpace = localSpace.Distinct().ToList();
     }
 
-    public Tile TryMove(int x, int y)
+    public (int, int) ConvertCoordinates(Vector3 position)
     {
-        return GetRoomByCoordinate(x, y);
+        var roundX = Mathf.RoundToInt(position.x / Instance.TileSize);
+        var roundY = Mathf.RoundToInt(position.z / Instance.TileSize);
+        return (roundX, roundY);
+    }
+
+    public bool TileIsValid(Vector3 position)
+    {
+        var coordinates = ConvertCoordinates(position);
+        return GetRoomByCoordinate(coordinates.Item1, coordinates.Item2) != null;
     }
 
     public Direction FindEntityDirection(Vector3 forwardVector)
     {
-        if (Vector3.Dot(Vector3.right, forwardVector) > .9f)
+        if (Vector3.Dot(Vector3.right, forwardVector.normalized) > .9f)
             return Direction.East;
 
-        if (Vector3.Dot(Vector3.left, forwardVector) > .9f)
+        if (Vector3.Dot(Vector3.left, forwardVector.normalized) > .9f)
             return Direction.West;
 
-        if (Vector3.Dot(Vector3.forward, forwardVector) > .9f)
+        if (Vector3.Dot(Vector3.forward, forwardVector.normalized) > .9f)
             return Direction.North;
 
-        if (Vector3.Dot(Vector3.back, forwardVector) > .9f)
+        if (Vector3.Dot(Vector3.back, forwardVector.normalized) > .9f)
             return Direction.South;
 
         return Direction.None;
     }
 
-    public void UpdatePlayer()
+    public void UpdatePlayer(Vector3 futurePosition, Vector3 futureForwardDirection)
     {
-        var roundX = Mathf.RoundToInt((player.transform.position.x / TileSize));
-        var roundY = Mathf.RoundToInt((player.transform.position.z / TileSize));
-
-        var x = roundX * TileSize;
-        var y = roundY * TileSize;
+        var coordinates = ConvertCoordinates(futurePosition);
 
         var position = transform.position;
         position.x -= TileSize * .5f;
         position.z -= TileSize * .5f;
 
-        CheckRecursion(roundX, roundY, FindEntityDirection(player.transform.forward));
+        var entityDirection = FindEntityDirection(futureForwardDirection);
+        CheckRecursion(coordinates.Item1, coordinates.Item2, entityDirection);
 
-        currentPlayerLocation.x = roundX;
-        currentPlayerLocation.y = roundY;
+        currentPlayerLocation.x = coordinates.Item1;
+        currentPlayerLocation.y = coordinates.Item2;
 
         dungeonRenderer.UpdateDungeonTiles(localSpace.ToArray());
     }
@@ -492,7 +496,7 @@ public class Dungeon : UnitySingleton<Dungeon>
 
         UnityEditor.Handles.Label(player.transform.position + Vector3.up * 4f, label);
 
-        /* For drawing the whole maze and not just the local space
+        ///* For drawing the whole maze and not just the local space
         foreach (var room in tiles)
         {
             if(room == null) 
@@ -502,10 +506,10 @@ public class Dungeon : UnitySingleton<Dungeon>
                 continue;
 
             var labelPosition = position + new Vector3(room.x * TileSize + (TileSize * .5f), 0, room.y * TileSize + (TileSize * .5f));
-            UnityEditor.Handles.Label(labelPosition, room.x.ToString() + "," + room.y.ToString());
+            UnityEditor.Handles.Label(labelPosition, room.x + "," + room.y);
             DebugUtility.DrawRoom(position, room, Color.blue);
         }
-        */
+        //*/
 
         foreach(var room in localSpace)
         {

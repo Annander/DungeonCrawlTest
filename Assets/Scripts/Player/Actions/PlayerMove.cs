@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class PlayerMove : BaseState
 {
-    private Transform transform;
-    private float move;
+    private readonly Transform transform;
+    private readonly float move;
 
     private float time;
     private float bounceTime;
@@ -11,7 +11,6 @@ public class PlayerMove : BaseState
     private Vector3 origin;
     private Vector3 goal;
 
-    private bool hasEntered;
     private bool didBounce;
 
     public PlayerMove(Transform transform, float move)
@@ -22,20 +21,17 @@ public class PlayerMove : BaseState
 
     public override void OnEnter()
     {
-        var futurePosition = transform.position + (transform.forward * move);
-
-        var roundX = Mathf.RoundToInt((futurePosition.x / Dungeon.Instance.TileSize));
-        var roundY = Mathf.RoundToInt((futurePosition.z / Dungeon.Instance.TileSize));
-
-        var tryMove = Dungeon.Instance.TryMove(roundX, roundY);
-
         origin = transform.position;
-        goal = futurePosition;
+        goal = origin + (transform.forward * move);
 
-        if (tryMove!= null) 
+        if (Dungeon.Instance.TileIsValid(goal)) 
         {
             // If there is a valid room, perform the move
             time = Player.Instance.MoveTime;
+            
+            if(Dungeon.Instance.TileIsValid(goal))
+                Dungeon.Instance.UpdatePlayer(goal, transform.forward);
+            
             didBounce = false;
         }
         else
@@ -44,8 +40,6 @@ public class PlayerMove : BaseState
             time = bounceTime = Player.Instance.MoveTime * .5f;
             didBounce = true;
         }
-        
-        hasEntered = true;
     }
 
     public override void OnUndo()
@@ -56,10 +50,17 @@ public class PlayerMove : BaseState
         origin = newOrigin;
         goal = newGoal;
 
-        if(didBounce)
+        if (didBounce)
+        {
             time = bounceTime = Player.Instance.MoveTime * .5f;
+        }
         else
-            time = Player.Instance.MoveTime;
+        {
+            time = Player.Instance.MoveTime;            
+            
+            if(Dungeon.Instance.TileIsValid(goal))
+                Dungeon.Instance.UpdatePlayer(goal, transform.forward);
+        }
     }
 
     public override StateReturn OnUpdate()
@@ -71,7 +72,7 @@ public class PlayerMove : BaseState
             time -= Time.deltaTime;
 
             var t = 1f - (time / Player.Instance.MoveTime);
-            t = Easing.Bounce_InOut(t);
+            t = Easing.Expo_Out(t);
 
             var vector = Vector3.Lerp(origin, frameGoal, t);
 
@@ -85,7 +86,7 @@ public class PlayerMove : BaseState
             bounceTime -= Time.deltaTime;
 
             var t = 1f - (bounceTime / Player.Instance.MoveTime);
-            t = Easing.Quint_Out(t);
+            t = Easing.Expo_Out(t);
 
             var vector = Vector3.Lerp(frameGoal, origin, t);
 
@@ -97,22 +98,17 @@ public class PlayerMove : BaseState
             return StateReturn.Running;
         }
 
-        Dungeon.Instance.UpdatePlayer();
-
         return StateReturn.Completed;
     }
 
     public override void OnExit()
     {
-        if(didBounce)
-        {
-            var newGoal = origin;
-            var newOrigin = goal;
+        if (!didBounce) return;
+        
+        var newGoal = origin;
+        var newOrigin = goal;
 
-            origin = newOrigin;
-            goal = newGoal;
-        }
+        origin = newOrigin;
+        goal = newGoal;
     }
-
-    public override bool HasEntered => hasEntered;
 }
