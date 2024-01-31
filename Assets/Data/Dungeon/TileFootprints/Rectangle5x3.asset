@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Width: 5
   Height: 3
-  Footprint: 010101010101010101010101010101
+  Footprint: 000001000001010101010000010000
   Entrances: 090000000c0000000500000002000000

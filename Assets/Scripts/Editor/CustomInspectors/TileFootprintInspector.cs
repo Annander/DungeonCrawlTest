@@ -33,7 +33,6 @@ public class TileFootprintInspector : Editor
         EditorGUILayout.Space(20f);
 
         var newEntrances = new List<int>();
-        var addOneEntrance = false;
 
         for (int y = 0; y < height.intValue; y++) 
         {
@@ -61,16 +60,35 @@ public class TileFootprintInspector : Editor
                 
                 element.boolValue = EditorGUILayout.Toggle(element.boolValue, GUILayout.Width(20f));
                 
+                // If the bool is not a valid entrance
+                var validEntrance = x == 0 || x == width.intValue - 1 || y == 0 || y == height.intValue -1;
+                
                 // If a change happened and you held shift down
-                if (element.boolValue != boolValue &&
+                if (validEntrance &&
+                    element.boolValue != boolValue &&
                     e.shift)
                 {
                     // If the bool was unselected
                     if (!element.boolValue)
                     {
                         element.boolValue = true;
+                        
                         if(!newEntrances.Contains(index) && !EntranceExists(index))
-                            newEntrances.Add(index);                        
+                            newEntrances.Add(index);
+                    }
+
+                    if (EntranceExists(index))
+                    {
+                        var elementIndexForDeletion = -1;
+            
+                        for (int i = 0; i < entrances.arraySize; i++)
+                        {
+                            if (entrances.GetArrayElementAtIndex(i).intValue == index)
+                                elementIndexForDeletion = i;
+                        }
+            
+                        if(elementIndexForDeletion > -1)
+                            entrances.DeleteArrayElementAtIndex(elementIndexForDeletion);                            
                     }
                 }
                 

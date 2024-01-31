@@ -40,8 +40,8 @@ public class Dungeon : UnitySingleton<Dungeon>
         player = GetComponentInChildren<Player>();
         dungeonRenderer = GetComponent<DungeonRenderer>();
 
-        //GenerateDungeon_Roaming();
-        GenerateDungeon_TileBased();
+        GenerateDungeon_Roaming();
+        //GenerateDungeon_TileBased();
     }
 
     private void Start()
@@ -496,7 +496,7 @@ public class Dungeon : UnitySingleton<Dungeon>
 
         UnityEditor.Handles.Label(player.transform.position + Vector3.up * 4f, label);
 
-        ///* For drawing the whole maze and not just the local space
+        /* For drawing the whole maze and not just the local space
         foreach (var room in tiles)
         {
             if(room == null) 
