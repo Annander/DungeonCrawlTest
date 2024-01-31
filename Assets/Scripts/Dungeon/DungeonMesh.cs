@@ -67,8 +67,8 @@ public class DungeonMesh : MonoBehaviour
         position.x -= tileSize * .5f;
         position.z -= tileSize * .5f;
 
-        var rX = tile.x * tileSize;
-        var rY = tile.y * tileSize;
+        var rX = tile.X * tileSize;
+        var rY = tile.Y * tileSize;
 
         // Floor
         var bottomLeftCorner = position + new Vector3(rX, 0, rY);

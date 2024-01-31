@@ -33,8 +33,8 @@ public class DebugUtility
     {
         color.a = .1f;
 
-        var rX = room.x * Dungeon.Instance.TileSize;
-        var rY = room.y * Dungeon.Instance.TileSize;
+        var rX = room.X * Dungeon.Instance.TileSize;
+        var rY = room.Y * Dungeon.Instance.TileSize;
 
         DebugUtility.DrawSquare(
             (position.z + (rY + Dungeon.Instance.TileSize)),

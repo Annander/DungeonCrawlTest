@@ -496,8 +496,7 @@ MonoBehaviour:
   tileCount: 1000
   recursion: 6
   footprints:
-  - {fileID: 11400000, guid: 07d5be8e0ca17f6439843e29fcbac213, type: 2}
-  - {fileID: 11400000, guid: 695f090a83247a1429416caf0c3bdef0, type: 2}
+  - {fileID: 11400000, guid: baa651e19032e904ba0b46472110f3d4, type: 2}
 --- !u!4 &1418216203
 Transform:
   m_ObjectHideFlags: 0

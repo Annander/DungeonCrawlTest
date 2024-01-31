@@ -5,42 +5,40 @@ using System.Collections.Generic;
 [CustomEditor(typeof(TileFootprint))]
 public class TileFootprintInspector : Editor
 {
-    private SerializedProperty width, height;
+    private SerializedProperty size;
     private SerializedProperty footprint;
     private SerializedProperty entrances;
 
     private void OnEnable()
     {
-        width = serializedObject.FindProperty("Width");
-        height = serializedObject.FindProperty("Height");
+        size = serializedObject.FindProperty("Size");
         footprint = serializedObject.FindProperty("Footprint");
         entrances = serializedObject.FindProperty("Entrances");
     }
 
     public override void OnInspectorGUI()
     {
-        EditorGUILayout.PropertyField(width);
-        EditorGUILayout.PropertyField(height);
+        EditorGUILayout.PropertyField(size);
 
-        if (width.intValue == 0 || height.intValue == 0)
+        if (size.intValue == 0)
         {
             serializedObject.ApplyModifiedProperties();
             return;
         }
 
-        footprint.arraySize = width.intValue * height.intValue;
+        footprint.arraySize = size.intValue * size.intValue;
 
         EditorGUILayout.Space(20f);
 
         var newEntrances = new List<int>();
 
-        for (int y = 0; y < height.intValue; y++) 
+        for (int y = 0; y < size.intValue; y++) 
         {
             EditorGUILayout.BeginHorizontal();
 
-            for(int x = 0; x < width.intValue; x++)
+            for(int x = 0; x < size.intValue; x++)
             {
-                var index = y * width.intValue + x;
+                var index = y * size.intValue + x;
                 var element = footprint.GetArrayElementAtIndex(index);
 
                 GUI.color = Color.white;
@@ -61,7 +59,7 @@ public class TileFootprintInspector : Editor
                 element.boolValue = EditorGUILayout.Toggle(element.boolValue, GUILayout.Width(20f));
                 
                 // If the bool is not a valid entrance
-                var validEntrance = x == 0 || x == width.intValue - 1 || y == 0 || y == height.intValue -1;
+                var validEntrance = x == 0 || x == size.intValue - 1 || y == 0 || y == size.intValue -1;
                 
                 // If a change happened and you held shift down
                 if (validEntrance &&
@@ -153,6 +151,24 @@ public class TileFootprintInspector : Editor
         if (GUILayout.Button("CLEAR TILES")) FillFootprintArray(false);
         
         if (GUILayout.Button("CLEAR ENTRANCES")) entrances.ClearArray();
+        
+        if (GUILayout.Button("ROTATE 180"))
+        {
+            (target as TileFootprint).RotateFootprint(TileFootprint.RotationOp.Rot180);
+            serializedObject.Update();
+        }
+
+        if (GUILayout.Button("ROTATE CW"))
+        {
+            (target as TileFootprint).RotateFootprint(TileFootprint.RotationOp.Rot90);
+            serializedObject.Update();
+        }
+        
+        if (GUILayout.Button("ROTATE CCW"))
+        {
+            (target as TileFootprint).RotateFootprint(TileFootprint.RotationOp.Rot270);
+            serializedObject.Update();
+        }
 
         EditorGUILayout.EndHorizontal();
 

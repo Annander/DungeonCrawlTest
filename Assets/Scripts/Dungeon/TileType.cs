@@ -1,6 +1,11 @@
 public enum TileType
 {
     /// <summary>
+    /// The default, which is used to determine if anything has changed the type along the way.
+    /// </summary>
+    None,
+    
+    /// <summary>
     /// A void tile is empty space and is used to make sure tile footprints don't intersect. It's the
     /// only form of a tile that is not "valid," by definition.
     /// </summary>

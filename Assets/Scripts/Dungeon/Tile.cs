@@ -2,8 +2,8 @@ public class Tile
 {
     public TileType Type;
 
-    public int x = -1;
-    public int y = -1;
+    public int X = -1;
+    public int Y = -1;
 
     public TileConnection[] Connections;
 }
